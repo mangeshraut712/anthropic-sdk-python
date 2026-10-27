@@ -17,7 +17,7 @@ from ..._models import FinalRequestOptions
 from ..._version import __version__
 from ..._constants import ANTHROPIC_API_VERSION
 from ..._streaming import Stream, AsyncStream
-from ..._exceptions import AnthropicError, APIStatusError
+from ..._exceptions import CredentialsError, AnthropicError, APIStatusError
 from ..._middleware import MiddlewareInput
 from ..._base_client import (
     DEFAULT_MAX_RETRIES,
@@ -182,7 +182,7 @@ class AnthropicVertex(BaseVertexClient[httpx2.Client, Stream[Any]], SyncAPIClien
             refresh_auth(self.credentials)
 
         if not self.credentials.token:
-            raise RuntimeError("Could not resolve API token from the environment")
+            raise CredentialsError("Could not resolve API token from the environment")
 
         assert isinstance(self.credentials.token, str)
         return self.credentials.token
@@ -352,7 +352,7 @@ class AsyncAnthropicVertex(BaseVertexClient[httpx2.AsyncClient, AsyncStream[Any]
             await asyncify(refresh_auth)(self.credentials)
 
         if not self.credentials.token:
-            raise RuntimeError("Could not resolve API token from the environment")
+            raise CredentialsError("Could not resolve API token from the environment")
 
         assert isinstance(self.credentials.token, str)
         return self.credentials.token
