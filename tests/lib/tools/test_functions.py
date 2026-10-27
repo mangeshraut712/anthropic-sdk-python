@@ -91,7 +91,7 @@ class TestFunctionTool:
             pytest.param(
                 {"a": "not a number", "b": 3},
                 ValueError,
-                "Invalid arguments for function add_numbers",
+                r"Invalid arguments for function add_numbers: a: Input should be a valid integer",
                 id="invalid_argument_type",
             ),
             pytest.param(

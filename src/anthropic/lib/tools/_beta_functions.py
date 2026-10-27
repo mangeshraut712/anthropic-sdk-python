@@ -269,6 +269,17 @@ class BaseFunctionTool(Generic[CallableT]):
         return TypeAdapter(self._func_with_validate)
 
 
+def _invalid_arguments_message(name: str, error: pydantic.ValidationError) -> str:
+    """Summarize pydantic field errors so the model can correct its next call."""
+    parts: list[str] = []
+    for err in error.errors():
+        loc = ".".join(str(x) for x in err.get("loc", ()) if x != "__root__")
+        msg = err.get("msg", "invalid value")
+        parts.append(f"{loc}: {msg}" if loc else msg)
+    detail = "; ".join(parts) if parts else str(error)
+    return f"Invalid arguments for function {name}: {detail}"
+
+
 class BetaFunctionTool(BaseFunctionTool[FunctionT]):
     def call(self, input: object) -> BetaFunctionToolResultType:
         if iscoroutinefunction(self.func):
@@ -280,7 +291,7 @@ class BetaFunctionTool(BaseFunctionTool[FunctionT]):
         try:
             return self._func_with_validate(**cast(Any, input))
         except pydantic.ValidationError as e:
-            raise ValueError(f"Invalid arguments for function {self.name}") from e
+            raise ValueError(_invalid_arguments_message(self.name, e)) from e
 
 
 class BetaAsyncFunctionTool(BaseFunctionTool[AsyncFunctionT]):
@@ -294,7 +305,7 @@ class BetaAsyncFunctionTool(BaseFunctionTool[AsyncFunctionT]):
         try:
             return await self._func_with_validate(**cast(Any, input))
         except pydantic.ValidationError as e:
-            raise ValueError(f"Invalid arguments for function {self.name}") from e
+            raise ValueError(_invalid_arguments_message(self.name, e)) from e
 
 
 def _is_sync_cm_factory(fn: object) -> bool:
